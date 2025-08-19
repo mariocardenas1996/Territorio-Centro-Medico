@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Registro de Predicaciones</title>
   <style>
     body {
@@ -66,13 +66,43 @@
     }
 
     @media (max-width: 600px) {
-      h1 { font-size: 1.2em; }
-      h2 { font-size: 1em; }
-      .box { font-size: 0.8em; }
-      .date { font-size: 0.6em; }
-      .reset-btn { width: 100%; padding: 10px; }
+      h1 {
+        font-size: 1.2em;
+      }
+      h2 {
+        font-size: 1em;
+      }
+      .box {
+        font-size: 0.8em;
+      }
+      .date {
+        font-size: 0.6em;
+      }
+      .reset-btn {
+        width: 100%;
+        padding: 10px;
+      }
     }
   </style>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+  <script>
+    // Configura con tus datos de Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyB4UZLg690pqV6BcTU1Z5hvwwb1N-Bvvts",
+    authDomain: "predicacion-centro-medico.firebaseapp.com",
+    projectId: "predicacion-centro-medico",
+    storageBucket: "predicacion-centro-medico.firebasestorage.app",
+    messagingSenderId: "911919962458",
+    appId: "1:911919962458:web:81ac1da17bcc7a32bc7b63",
+    measurementId: "G-HDL9592R95
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+  </script>
 </head>
 <body>
   <h1>Registro de Predicaciones</h1>
@@ -99,7 +129,6 @@
     // Crear cuadros en la sección
     function crearCuadros(inicio, fin, contenedorId) {
       const contenedor = document.getElementById(contenedorId);
-
       for (let i = inicio; i <= fin; i++) {
         const boxWrapper = document.createElement("div");
         boxWrapper.style.textAlign = "center";
@@ -115,18 +144,8 @@
         const boxId = `${contenedorId}-${i}`;
         box.dataset.id = boxId;
 
-        // Cargar estado guardado
-        const saved = localStorage.getItem(boxId);
-        if (saved) {
-          const data = JSON.parse(saved);
-          if (data.marked) {
-            box.classList.add("marked");
-            date.textContent = data.date;
-          }
-        }
-
         // Evento clic
-        box.addEventListener("click", function() {
+        box.addEventListener("click", function () {
           if (!box.classList.contains("marked")) {
             marcarCaja(box, date, contenedorId);
           }
@@ -138,56 +157,97 @@
       }
     }
 
-    // Marcar caja y guardar en localStorage
+    // Marcar caja y guardar en Firebase
     function marcarCaja(box, date, contenedorId) {
       box.classList.add("marked");
       const hoy = new Date();
       const fechaStr = hoy.toLocaleDateString("es-ES", {
-        day: "2-digit", month: "2-digit", year: "numeric"
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
       });
       date.textContent = fechaStr;
 
-      // Guardar en localStorage
-      localStorage.setItem(box.dataset.id, JSON.stringify({
+      // Guardar en Firebase
+      db.ref(`cuadros/${box.dataset.id}`).set({
         marked: true,
-        date: fechaStr
-      }));
+        date: fechaStr,
+        contenedorId: contenedorId,
+      });
 
       // Verificar si todas están marcadas
       const contenedor = document.getElementById(contenedorId);
       const boxes = contenedor.querySelectorAll(".box");
-      const todasMarcadas = Array.from(boxes).every(b => b.classList.contains("marked"));
+      const todasMarcadas = Array.from(boxes).every((b) =>
+        b.classList.contains("marked")
+      );
 
       if (todasMarcadas) {
         setTimeout(() => {
           resetearSeccion(contenedorId, true);
-          alert("✅ Se han completado todas las predicaciones de esta sección. Se reinicia el registro.");
+          alert(
+            "✅ Se han completado todas las predicaciones de esta sección. Se reinicia el registro."
+          );
         }, 400);
       }
     }
 
-    // Resetear sección y limpiar localStorage
+    // Resetear sección y limpiar Firebase
     function resetearSeccion(contenedorId, auto = false) {
       const contenedor = document.getElementById(contenedorId);
       const boxes = contenedor.querySelectorAll(".box");
       const dates = contenedor.querySelectorAll(".date");
+      const updates = {};
 
-      boxes.forEach(b => {
+      boxes.forEach((b) => {
         b.classList.remove("marked");
-        localStorage.removeItem(b.dataset.id);
+        updates[`cuadros/${b.dataset.id}`] = null; // Eliminar del Firebase
       });
-      dates.forEach(d => d.textContent = "");
+      dates.forEach((d) => (d.textContent = ""));
+
+      db.ref().update(updates);
 
       if (!auto) {
         alert("🔄 Se ha reiniciado manualmente la sección.");
       }
     }
 
-    // Crear las tres secciones
+    // Escuchar cambios en Firebase en tiempo real y actualizar UI
+    function escucharFirebase() {
+      db.ref("cuadros").on("value", (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return;
+
+        // Primero limpia todas las marcas para evitar duplicados si algo se borra
+        ["grid-semana", "grid-sabado", "grid-domingo"].forEach((id) => {
+          const cont = document.getElementById(id);
+          if (!cont) return;
+          cont.querySelectorAll(".box.marked").forEach((box) => {
+            box.classList.remove("marked");
+            const dateEl = box.nextElementSibling;
+            if (dateEl) dateEl.textContent = "";
+          });
+        });
+
+        // Aplica marcados que hay en Firebase
+        Object.entries(data).forEach(([boxId, value]) => {
+          if (value.marked) {
+            const box = document.querySelector(`.box[data-id="${boxId}"]`);
+            const date = box?.nextElementSibling;
+            if (box) box.classList.add("marked");
+            if (date) date.textContent = value.date;
+          }
+        });
+      });
+    }
+
+    // Crear cuadros para las tres secciones
     crearCuadros(101, 150, "grid-semana");
     crearCuadros(201, 270, "grid-sabado");
     crearCuadros(301, 350, "grid-domingo");
+
+    // Iniciar escucha Firebase
+    escucharFirebase();
   </script>
 </body>
 </html>
-
