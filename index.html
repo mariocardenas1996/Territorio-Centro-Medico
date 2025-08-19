@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro de Predicaciones</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 10px;
+      background: #f4f4f4;
+    }
+    h1 {
+      text-align: center;
+      font-size: 1.5em;
+    }
+    h2 {
+      margin-top: 20px;
+      color: #333;
+      font-size: 1.2em;
+    }
+    .section {
+      margin-bottom: 40px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .box {
+      aspect-ratio: 1 / 1; /* Mantener cuadrados */
+      background: white;
+      border: 2px solid #444;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 0.9em;
+      border-radius: 6px;
+      user-select: none;
+    }
+    .box.marked {
+      background: red;
+      color: white;
+      cursor: default;
+    }
+    .date {
+      font-size: 0.7em;
+      color: #555;
+      text-align: center;
+      margin-top: 3px;
+    }
+    .reset-btn {
+      padding: 6px 12px;
+      background: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9em;
+    }
+    .reset-btn:hover {
+      background: #0056b3;
+    }
+
+    /* Ajustes para móviles pequeños */
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 1.2em;
+      }
+      h2 {
+        font-size: 1em;
+      }
+      .box {
+        font-size: 0.8em;
+      }
+      .date {
+        font-size: 0.6em;
+      }
+      .reset-btn {
+        width: 100%;
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Registro de Predicaciones</h1>
+
+  <div class="section" id="semana">
+    <h2>Predicación de entre semana</h2>
+    <div class="grid" id="grid-semana"></div>
+    <button class="reset-btn" onclick="resetearSeccion('grid-semana')">🔄 Reiniciar sección</button>
+  </div>
+
+  <div class="section" id="sabado">
+    <h2>Predicación Sábado</h2>
+    <div class="grid" id="grid-sabado"></div>
+    <button class="reset-btn" onclick="resetearSeccion('grid-sabado')">🔄 Reiniciar sección</button>
+  </div>
+
+  <div class="section" id="domingo">
+    <h2>Predicación Domingo</h2>
+    <div class="grid" id="grid-domingo"></div>
+    <button class="reset-btn" onclick="resetearSeccion('grid-domingo')">🔄 Reiniciar sección</button>
+  </div>
+
+  <script>
+    // Función para crear los cuadros numerados
+    function crearCuadros(inicio, fin, contenedorId) {
+      const contenedor = document.getElementById(contenedorId);
+
+      for (let i = inicio; i <= fin; i++) {
+        const boxWrapper = document.createElement("div");
+        boxWrapper.style.textAlign = "center";
+
+        const box = document.createElement("div");
+        box.classList.add("box");
+        box.textContent = i;
+
+        const date = document.createElement("div");
+        date.classList.add("date");
+
+        box.dataset.index = i;
+        box.dataset.section = contenedorId;
+
+        box.addEventListener("click", function() {
+          if (!box.classList.contains("marked")) {
+            marcarCaja(box, date, contenedorId);
+          }
+        });
+
+        boxWrapper.appendChild(box);
+        boxWrapper.appendChild(date);
+        contenedor.appendChild(boxWrapper);
+      }
+    }
+
+    // Función para marcar caja
+    function marcarCaja(box, date, contenedorId) {
+      box.classList.add("marked");
+      const hoy = new Date();
+      const fechaStr = hoy.toLocaleDateString("es-ES", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+      });
+      date.textContent = fechaStr;
+
+      // Verificar si todas las cajas de la sección están marcadas
+      const contenedor = document.getElementById(contenedorId);
+      const boxes = contenedor.querySelectorAll(".box");
+      const todasMarcadas = Array.from(boxes).every(b => b.classList.contains("marked"));
+
+      if (todasMarcadas) {
+        setTimeout(() => {
+          resetearSeccion(contenedorId);
+          alert("✅ Se han completado todas las predicaciones de esta sección. Se reinicia el registro.");
+        }, 400);
+      }
+    }
+
+    // Función para resetear una sección
+    function resetearSeccion(contenedorId) {
+      const contenedor = document.getElementById(contenedorId);
+      const boxes = contenedor.querySelectorAll(".box");
+      const dates = contenedor.querySelectorAll(".date");
+
+      boxes.forEach(b => b.classList.remove("marked"));
+      dates.forEach(d => d.textContent = "");
+    }
+
+    // Crear las tres secciones
+    crearCuadros(101, 150, "grid-semana");
+    crearCuadros(201, 270, "grid-sabado");
+    crearCuadros(301, 350, "grid-domingo");
+  </script>
+</body>
+</html>
