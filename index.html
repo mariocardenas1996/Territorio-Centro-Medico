@@ -35,7 +35,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      cursor: pointer;
+      cursor: not-allowed;
       font-weight: bold;
       font-size: 0.9em;
       border-radius: 6px;
@@ -44,7 +44,9 @@
     .box.marked {
       background: red;
       color: white;
-      cursor: default;
+    }
+    .box.editable {
+      cursor: pointer;
     }
     .date {
       font-size: 0.7em;
@@ -52,7 +54,12 @@
       text-align: center;
       margin-top: 3px;
     }
-    .reset-btn {
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .btn {
       padding: 6px 12px;
       background: #007BFF;
       color: white;
@@ -61,10 +68,9 @@
       cursor: pointer;
       font-size: 0.9em;
     }
-    .reset-btn:hover {
+    .btn:hover {
       background: #0056b3;
     }
-
     @media (max-width: 600px) {
       h1 {
         font-size: 1.2em;
@@ -78,9 +84,8 @@
       .date {
         font-size: 0.6em;
       }
-      .reset-btn {
-        width: 100%;
-        padding: 10px;
+      .btn {
+        flex: 1;
       }
     }
   </style>
@@ -90,7 +95,6 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
   <script>
-    // Configuración Firebase (con databaseURL corregida)
     const firebaseConfig = {
       apiKey: "AIzaSyB4UZLg690pqV6BcTU1Z5hvwwb1N-Bvvts",
       authDomain: "predicacion-centro-medico.firebaseapp.com",
@@ -104,7 +108,12 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Crear cuadros en la sección
+    const editState = {
+      "grid-semana": false,
+      "grid-sabado": false,
+      "grid-domingo": false
+    };
+
     function crearCuadros(inicio, fin, contenedorId) {
       const contenedor = document.getElementById(contenedorId);
       for (let i = inicio; i <= fin; i++) {
@@ -114,18 +123,25 @@
         const box = document.createElement("div");
         box.classList.add("box");
         box.textContent = i;
+        box.dataset.id = `${contenedorId}-${i}`;
 
         const date = document.createElement("div");
         date.classList.add("date");
 
-        // ID único para cada cuadro
-        const boxId = `${contenedorId}-${i}`;
-        box.dataset.id = boxId;
-
-        // Evento clic para marcar
+        // Evento clic (solo si está en modo edición)
         box.addEventListener("click", function () {
-          if (!box.classList.contains("marked")) {
-            marcarCaja(box, date, contenedorId);
+          if (!editState[contenedorId]) return;
+
+          box.classList.toggle("marked");
+          if (box.classList.contains("marked")) {
+            const fechaStr = new Date().toLocaleDateString("es-ES", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            });
+            date.textContent = fechaStr;
+          } else {
+            date.textContent = "";
           }
         });
 
@@ -135,91 +151,55 @@
       }
     }
 
-    // Marcar caja y guardar en Firebase
-    function marcarCaja(box, date, contenedorId) {
-      box.classList.add("marked");
-      const hoy = new Date();
-      const fechaStr = hoy.toLocaleDateString("es-ES", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      });
-      date.textContent = fechaStr;
-
-      // Guardar en Firebase
-      db.ref(`cuadros/${box.dataset.id}`).set({
-        marked: true,
-        date: fechaStr,
-        contenedorId: contenedorId,
-      });
-
-      // Verificar si todas están marcadas
+    function toggleEdicion(contenedorId, editBtn, saveBtn) {
+      editState[contenedorId] = true;
       const contenedor = document.getElementById(contenedorId);
-      const boxes = contenedor.querySelectorAll(".box");
-      const todasMarcadas = Array.from(boxes).every((b) =>
-        b.classList.contains("marked")
-      );
-
-      if (todasMarcadas) {
-        setTimeout(() => {
-          resetearSeccion(contenedorId, true);
-          alert(
-            "✅ Se han completado todas las predicaciones de esta sección. Se reinicia el registro."
-          );
-        }, 400);
-      }
+      contenedor.querySelectorAll(".box").forEach((b) => {
+        b.classList.add("editable");
+      });
+      editBtn.disabled = true;
+      saveBtn.disabled = false;
     }
 
-    // Resetear sección y limpiar Firebase
-    function resetearSeccion(contenedorId, auto = false) {
+    function guardarCambios(contenedorId, editBtn, saveBtn) {
+      editState[contenedorId] = false;
       const contenedor = document.getElementById(contenedorId);
-      const boxes = contenedor.querySelectorAll(".box");
-      const dates = contenedor.querySelectorAll(".date");
       const updates = {};
 
-      boxes.forEach((b) => {
-        b.classList.remove("marked");
-        updates[`cuadros/${b.dataset.id}`] = null; // Eliminar del Firebase
+      contenedor.querySelectorAll(".box").forEach((box) => {
+        box.classList.remove("editable");
+        const dateEl = box.nextElementSibling;
+        if (box.classList.contains("marked")) {
+          updates[`cuadros/${box.dataset.id}`] = {
+            marked: true,
+            date: dateEl.textContent,
+            contenedorId: contenedorId,
+          };
+        } else {
+          updates[`cuadros/${box.dataset.id}`] = null;
+        }
       });
-      dates.forEach((d) => (d.textContent = ""));
 
-      db.ref().update(updates);
+      db.ref("cuadros").update(updates);
 
-      if (!auto) {
-        alert("🔄 Se ha reiniciado manualmente la sección.");
-      }
+      editBtn.disabled = false;
+      saveBtn.disabled = true;
     }
 
-    // Escuchar cambios en Firebase en tiempo real y actualizar UI
     function escucharFirebase() {
       db.ref("cuadros").on("value", (snapshot) => {
         const data = snapshot.val();
-        if (!data) {
-          // Si no hay datos, limpia todas las marcas
-          ["grid-semana", "grid-sabado", "grid-domingo"].forEach((id) => {
-            const cont = document.getElementById(id);
-            if (!cont) return;
-            cont.querySelectorAll(".box.marked").forEach((box) => {
-              box.classList.remove("marked");
-              const dateEl = box.nextElementSibling;
-              if (dateEl) dateEl.textContent = "";
-            });
-          });
-          return;
-        }
-
-        // Primero limpia todas las marcas para evitar duplicados si algo se borra
         ["grid-semana", "grid-sabado", "grid-domingo"].forEach((id) => {
           const cont = document.getElementById(id);
-          if (!cont) return;
-          cont.querySelectorAll(".box.marked").forEach((box) => {
+          cont.querySelectorAll(".box").forEach((box) => {
             box.classList.remove("marked");
             const dateEl = box.nextElementSibling;
             if (dateEl) dateEl.textContent = "";
           });
         });
 
-        // Aplica marcados que hay en Firebase
+        if (!data) return;
+
         Object.entries(data).forEach(([boxId, value]) => {
           if (value.marked) {
             const box = document.querySelector(`.box[data-id="${boxId}"]`);
@@ -231,19 +211,21 @@
       });
     }
 
-    // Esperar a que DOM cargue para evitar errores con elementos no cargados
     document.addEventListener("DOMContentLoaded", () => {
-      // Crear cuadros para las tres secciones
       crearCuadros(101, 146, "grid-semana");
       crearCuadros(201, 268, "grid-sabado");
       crearCuadros(301, 350, "grid-domingo");
 
-      /* Agregar event listeners a los botones Reset
-      document.getElementById("reset-semana").addEventListener("click", () => resetearSeccion("grid-semana"));
-      document.getElementById("reset-sabado").addEventListener("click", () => resetearSeccion("grid-sabado"));
-      document.getElementById("reset-domingo").addEventListener("click", () => resetearSeccion("grid-domingo"));
-*/
-      // Iniciar escucha Firebase
+      // Configurar botones
+      ["semana", "sabado", "domingo"].forEach((nombre) => {
+        const id = `grid-${nombre}`;
+        const editBtn = document.getElementById(`editar-${nombre}`);
+        const saveBtn = document.getElementById(`guardar-${nombre}`);
+
+        editBtn.addEventListener("click", () => toggleEdicion(id, editBtn, saveBtn));
+        saveBtn.addEventListener("click", () => guardarCambios(id, editBtn, saveBtn));
+      });
+
       escucharFirebase();
     });
   </script>
@@ -252,25 +234,7 @@
   <h1>Registro de Predicaciones</h1>
 
   <div class="section">
-  <h2>Predicación de entre semana</h2>
-  <div class="grid" id="grid-semana"></div>
-  <!-- <button class="reset-btn" id="reset-semana">🔄 Reiniciar sección</button> -->
-</div>
-
-<div class="section">
-  <h2>Predicación Sábado</h2>
-  <div class="grid" id="grid-sabado"></div>
- <<!--  <button class="reset-btn" id="reset-sabado">🔄 Reiniciar sección</button>-->
-</div>
-
-<div class="section">
-  <h2>Predicación Domingo</h2>
-  <div class="grid" id="grid-domingo"></div>
-  <!-- <button class="reset-btn" id="reset-domingo">🔄 Reiniciar sección</button>-->
-</div>
-</body>
-</html>
-
-
-
-
+    <h2>Predicación de entre semana</h2>
+    <div class="btn-group">
+      <button class="btn" id="editar-semana">🔧 Editar</button>
+      <
