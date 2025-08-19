@@ -170,7 +170,7 @@
       }
     }
 
-    // Resetear sección y limpiar Firebase
+    /* Resetear sección y limpiar Firebase
     function resetearSeccion(contenedorId, auto = false) {
       const contenedor = document.getElementById(contenedorId);
       const boxes = contenedor.querySelectorAll(".box");
@@ -189,7 +189,7 @@
         alert("🔄 Se ha reiniciado manualmente la sección.");
       }
     }
-
+*/
     // Escuchar cambios en Firebase en tiempo real y actualizar UI
     function escucharFirebase() {
       db.ref("cuadros").on("value", (snapshot) => {
@@ -270,4 +270,5 @@
 </div>
 </body>
 </html>
+
 
