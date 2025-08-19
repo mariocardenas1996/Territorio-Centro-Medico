@@ -3,210 +3,32 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Registro de Predicaciones</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 10px;
-      background: #f4f4f4;
-    }
-    h1 {
-      text-align: center;
-      font-size: 1.5em;
-    }
-    h2 {
-      margin-top: 20px;
-      color: #333;
-      font-size: 1.2em;
-    }
-    .section {
-      margin-bottom: 40px;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-    .box {
-      aspect-ratio: 1 / 1;
-      background: white;
-      border: 2px solid #444;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-      font-weight: bold;
-      font-size: 0.9em;
-      border-radius: 6px;
-      user-select: none;
-    }
-    .box.marked {
-      background: red;
-      color: white;
-      cursor: default;
-    }
-    .date {
-      font-size: 0.7em;
-      color: #555;
-      text-align: center;
-      margin-top: 3px;
-    }
-    .reset-btn {
-      padding: 6px 12px;
-      background: #007BFF;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 0.9em;
-    }
-    .reset-btn:hover {
-      background: #0056b3;
-    }
-
-    @media (max-width: 600px) {
-      h1 {
-        font-size: 1.2em;
-      }
-      h2 {
-        font-size: 1em;
-      }
-      .box {
-        font-size: 0.8em;
-      }
-      .date {
-        font-size: 0.6em;
-      }
-      .reset-btn {
-        width: 100%;
-        padding: 10px;
-      }
-    }
-  </style>
+  <title>Test Firebase</title>
+</head>
+<body>
+  <h1>Test Firebase</h1>
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
   <script>
-    // Configura con tus datos de Firebase (corrige cualquier error aquí)
-const firebaseConfig = {
-  apiKey: "AIzaSyB4UZLg690pqV6BcTU1Z5hvwwb1N-Bvvts",
-  authDomain: "predicacion-centro-medico.firebaseapp.com",
-  projectId: "predicacion-centro-medico",
-  storageBucket: "predicacion-centro-medico.appspot.com",
-  messagingSenderId: "911919962458",
-  appId: "1:911919962458:web:81ac1da17bcc7a32bc7b63",
-};
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    // Crear cuadros en la sección
-    function crearCuadros(inicio, fin, contenedorId) {
-      const contenedor = document.getElementById(contenedorId);
-      for (let i = inicio; i <= fin; i++) {
-        const boxWrapper = document.createElement("div");
-        boxWrapper.style.textAlign = "center";
-
-        const box = document.createElement("div");
-        box.classList.add("box");
-        box.textContent = i;
-
-        const date = document.createElement("div");
-        date.classList.add("date");
-
-        // ID único para cada cuadro
-        const boxId = `${contenedorId}-${i}`;
-        box.dataset.id = boxId;
-
-        // Evento clic
-        box.addEventListener("click", function () {
-          if (!box.classList.contains("marked")) {
-            marcarCaja(box, date, contenedorId);
-          }
-        });
-
-        boxWrapper.appendChild(box);
-        boxWrapper.appendChild(date);
-        contenedor.appendChild(boxWrapper);
-      }
+    try {
+      const firebaseConfig = {
+        apiKey: "AIzaSyB4UZLg690pqV6BcTU1Z5hvwwb1N-Bvvts",
+        authDomain: "predicacion-centro-medico.firebaseapp.com",
+        projectId: "predicacion-centro-medico",
+        storageBucket: "predicacion-centro-medico.appspot.com",
+        messagingSenderId: "911919962458",
+        appId: "1:911919962458:web:81ac1da17bcc7a32bc7b63",
+        measurementId: "G-HDL9592R95"
+      };
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database();
+      console.log("Firebase inicializado correctamente");
+    } catch(e) {
+      console.error("Error inicializando Firebase:", e);
     }
-
-    // Marcar caja y guardar en Firebase
-    function marcarCaja(box, date, contenedorId) {
-      box.classList.add("marked");
-      const hoy = new Date();
-      const fechaStr = hoy.toLocaleDateString("es-ES", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      });
-      date.textContent = fechaStr;
-
-      // Guardar en Firebase
-      db.ref(`cuadros/${box.dataset.id}`).set({
-        marked: true,
-        date: fechaStr,
-        contenedorId: contenedorId,
-      });
-
-      // Verificar si todas están marcadas
-      const contenedor = document.getElementById(contenedorId);
-      const boxes = contenedor.querySelectorAll(".box");
-      const todasMarcadas = Array.from(boxes).every((b) =>
-        b.classList.contains("marked")
-      );
-
-      if (todasMarcadas) {
-        setTimeout(() => {
-          resetearSeccion(contenedorId, true);
-          alert(
-            "✅ Se han completado todas las predicaciones de esta sección. Se reinicia el registro."
-          );
-        }, 400);
-      }
-    }
-
-    // Resetear sección y limpiar Firebase
-    function resetearSeccion(contenedorId, auto = false) {
-      const contenedor = document.getElementById(contenedorId);
-      const boxes = contenedor.querySelectorAll(".box");
-      const dates = contenedor.querySelectorAll(".date");
-      const updates = {};
-
-      boxes.forEach((b) => {
-        b.classList.remove("marked");
-        updates[`cuadros/${b.dataset.id}`] = null; // Eliminar del Firebase
-      });
-      dates.forEach((d) => (d.textContent = ""));
-
-      db.ref().update(updates);
-
-      if (!auto) {
-        alert("🔄 Se ha reiniciado manualmente la sección.");
-      }
-    }
-
-    // Escuchar cambios en Firebase en tiempo real y actualizar UI
-    function escucharFirebase() {
-      db.ref("cuadros").on("value", (snapshot) => {
-        const data = snapshot.val();
-        if (!data) return;
-
-        // Aplica marcados que hay en Firebase sin limpiar todo primero
-        Object.entries(data).forEach(([boxId, value]) => {
-          const box = document.querySelector(`.box[data-id="${boxId}"]`);
-          const date = box?.nextElementSibling;
-          if (box) {
-            if (value.marked) {
-              box.classList.add("marked");
-              if (date) date.textContent = value.date;
-            } else {
-              box.classList.remove("marked");
-              if (date) date.textContent = "";
-            }
-          }
-        });
-
-
+  </script>
+</body>
+</html>
