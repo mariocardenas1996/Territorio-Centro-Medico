@@ -29,7 +29,7 @@
       margin-bottom: 10px;
     }
     .box {
-      aspect-ratio: 1 / 1; /* Mantener cuadrados */
+      aspect-ratio: 1 / 1;
       background: white;
       border: 2px solid #444;
       display: flex;
@@ -65,50 +65,38 @@
       background: #0056b3;
     }
 
-    /* Ajustes para móviles pequeños */
     @media (max-width: 600px) {
-      h1 {
-        font-size: 1.2em;
-      }
-      h2 {
-        font-size: 1em;
-      }
-      .box {
-        font-size: 0.8em;
-      }
-      .date {
-        font-size: 0.6em;
-      }
-      .reset-btn {
-        width: 100%;
-        padding: 10px;
-      }
+      h1 { font-size: 1.2em; }
+      h2 { font-size: 1em; }
+      .box { font-size: 0.8em; }
+      .date { font-size: 0.6em; }
+      .reset-btn { width: 100%; padding: 10px; }
     }
   </style>
 </head>
 <body>
   <h1>Registro de Predicaciones</h1>
 
-  <div class="section" id="semana">
+  <div class="section">
     <h2>Predicación de entre semana</h2>
     <div class="grid" id="grid-semana"></div>
     <button class="reset-btn" onclick="resetearSeccion('grid-semana')">🔄 Reiniciar sección</button>
   </div>
 
-  <div class="section" id="sabado">
+  <div class="section">
     <h2>Predicación Sábado</h2>
     <div class="grid" id="grid-sabado"></div>
     <button class="reset-btn" onclick="resetearSeccion('grid-sabado')">🔄 Reiniciar sección</button>
   </div>
 
-  <div class="section" id="domingo">
+  <div class="section">
     <h2>Predicación Domingo</h2>
     <div class="grid" id="grid-domingo"></div>
     <button class="reset-btn" onclick="resetearSeccion('grid-domingo')">🔄 Reiniciar sección</button>
   </div>
 
   <script>
-    // Función para crear los cuadros numerados
+    // Crear cuadros en la sección
     function crearCuadros(inicio, fin, contenedorId) {
       const contenedor = document.getElementById(contenedorId);
 
@@ -123,9 +111,21 @@
         const date = document.createElement("div");
         date.classList.add("date");
 
-        box.dataset.index = i;
-        box.dataset.section = contenedorId;
+        // ID único para cada cuadro
+        const boxId = ${contenedorId}-${i};
+        box.dataset.id = boxId;
 
+        // Cargar estado guardado
+        const saved = localStorage.getItem(boxId);
+        if (saved) {
+          const data = JSON.parse(saved);
+          if (data.marked) {
+            box.classList.add("marked");
+            date.textContent = data.date;
+          }
+        }
+
+        // Evento clic
         box.addEventListener("click", function() {
           if (!box.classList.contains("marked")) {
             marcarCaja(box, date, contenedorId);
@@ -138,43 +138,54 @@
       }
     }
 
-    // Función para marcar caja
+    // Marcar caja y guardar en localStorage
     function marcarCaja(box, date, contenedorId) {
       box.classList.add("marked");
       const hoy = new Date();
       const fechaStr = hoy.toLocaleDateString("es-ES", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric"
+        day: "2-digit", month: "2-digit", year: "numeric"
       });
       date.textContent = fechaStr;
 
-      // Verificar si todas las cajas de la sección están marcadas
+      // Guardar en localStorage
+      localStorage.setItem(box.dataset.id, JSON.stringify({
+        marked: true,
+        date: fechaStr
+      }));
+
+      // Verificar si todas están marcadas
       const contenedor = document.getElementById(contenedorId);
       const boxes = contenedor.querySelectorAll(".box");
       const todasMarcadas = Array.from(boxes).every(b => b.classList.contains("marked"));
 
       if (todasMarcadas) {
         setTimeout(() => {
-          resetearSeccion(contenedorId);
+          resetearSeccion(contenedorId, true);
           alert("✅ Se han completado todas las predicaciones de esta sección. Se reinicia el registro.");
         }, 400);
       }
     }
 
-    // Función para resetear una sección
-    function resetearSeccion(contenedorId) {
+    // Resetear sección y limpiar localStorage
+    function resetearSeccion(contenedorId, auto = false) {
       const contenedor = document.getElementById(contenedorId);
       const boxes = contenedor.querySelectorAll(".box");
       const dates = contenedor.querySelectorAll(".date");
 
-      boxes.forEach(b => b.classList.remove("marked"));
+      boxes.forEach(b => {
+        b.classList.remove("marked");
+        localStorage.removeItem(b.dataset.id);
+      });
       dates.forEach(d => d.textContent = "");
+
+      if (!auto) {
+        alert("🔄 Se ha reiniciado manualmente la sección.");
+      }
     }
 
     // Crear las tres secciones
-    crearCuadros(101, 146, "grid-semana");
-    crearCuadros(201, 268, "grid-sabado");
+    crearCuadros(101, 150, "grid-semana");
+    crearCuadros(201, 270, "grid-sabado");
     crearCuadros(301, 350, "grid-domingo");
   </script>
 </body>
