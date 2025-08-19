@@ -27,6 +27,10 @@
       opacity: 0.5;
       pointer-events: none;
     }
+    /* Esta regla permite que los botones dentro de sección bloqueada sigan siendo clicables */
+    .section.bloqueado .btn-group {
+      pointer-events: auto;
+    }
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
@@ -77,8 +81,8 @@
       background: #0056b3;
     }
     .btn:disabled {
-      background: #cccccc;
-      cursor: not-allowed;
+      background: #999;
+      cursor: default;
     }
     @media (max-width: 600px) {
       h1 {
@@ -168,7 +172,6 @@
       editBtn.disabled = true;
       saveBtn.disabled = false;
 
-      // Quitar transparencia (quitar clase bloqueado)
       const sectionId = `section-${contenedorId.split('-')[1]}`;
       document.getElementById(sectionId).classList.remove("bloqueado");
     }
@@ -197,7 +200,6 @@
       editBtn.disabled = false;
       saveBtn.disabled = true;
 
-      // Volver a poner transparencia (agregar clase bloqueado)
       const sectionId = `section-${contenedorId.split('-')[1]}`;
       document.getElementById(sectionId).classList.add("bloqueado");
     }
@@ -227,7 +229,6 @@
       });
     }
 
-    // Esperar a que el DOM esté listo antes de asignar eventos
     document.addEventListener("DOMContentLoaded", () => {
       crearCuadros(101, 146, "grid-semana");
       crearCuadros(201, 268, "grid-sabado");
@@ -237,11 +238,6 @@
         const id = `grid-${nombre}`;
         const editBtn = document.getElementById(`editar-${nombre}`);
         const saveBtn = document.getElementById(`guardar-${nombre}`);
-
-        if (!editBtn || !saveBtn) {
-          console.error(`No se encontró botón editar o guardar para ${nombre}`);
-          return;
-        }
 
         editBtn.addEventListener("click", () => toggleEdicion(id, editBtn, saveBtn));
         saveBtn.addEventListener("click", () => guardarCambios(id, editBtn, saveBtn));
