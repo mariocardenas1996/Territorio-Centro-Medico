@@ -176,34 +176,41 @@
       document.getElementById(sectionId).classList.remove("bloqueado");
     }
 
-    function guardarCambios(contenedorId, editBtn, saveBtn) {
-      editState[contenedorId] = false;
-      const contenedor = document.getElementById(contenedorId);
-      const updates = {};
+function guardarCambios(contenedorId, editBtn, saveBtn) {
+  editState[contenedorId] = false;
+  const contenedor = document.getElementById(contenedorId);
+  const updates = {};
 
-      contenedor.querySelectorAll(".box").forEach((box) => {
-        box.classList.remove("editable");
-        const dateEl = box.nextElementSibling;
-        if (box.classList.contains("marked")) {
-          updates[`cuadros/${box.dataset.id}`] = {
-            marked: true,
-            date: dateEl.textContent,
-            contenedorId: contenedorId,
-          };
-        } else {
-          updates[`cuadros/${box.dataset.id}`] = null;
-        }
-      });
+  contenedor.querySelectorAll(".box").forEach((box) => {
+    box.classList.remove("editable");
+    const dateEl = box.nextElementSibling;
+    if (box.classList.contains("marked")) {
+      updates[box.dataset.id] = {
+        marked: true,
+        date: dateEl.textContent,
+        contenedorId: contenedorId,
+      };
+    } else {
+      updates[box.dataset.id] = null;
+    }
+  });
 
-      db.ref("cuadros").update(updates);
+  console.log("Guardando cambios:", updates);
 
+  db.ref("cuadros").update(updates)
+    .then(() => {
+      console.log("Cambios guardados correctamente");
       editBtn.disabled = false;
       saveBtn.disabled = true;
 
       const sectionId = `section-${contenedorId.split('-')[1]}`;
       document.getElementById(sectionId).classList.add("bloqueado");
-    }
-
+    })
+    .catch((error) => {
+      console.error("Error guardando cambios:", error);
+      alert("Error al guardar los cambios. Intenta nuevamente.");
+    });
+}
     function escucharFirebase() {
       db.ref("cuadros").on("value", (snapshot) => {
         const data = snapshot.val();
@@ -278,3 +285,4 @@
   </div>
 </body>
 </html>
+
