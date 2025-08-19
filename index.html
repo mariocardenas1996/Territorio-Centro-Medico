@@ -21,6 +21,11 @@
     }
     .section {
       margin-bottom: 40px;
+      transition: opacity 0.3s ease;
+    }
+    .section.bloqueado {
+      opacity: 0.5;
+      pointer-events: none;
     }
     .grid {
       display: grid;
@@ -128,7 +133,6 @@
         const date = document.createElement("div");
         date.classList.add("date");
 
-        // Evento clic (solo si está en modo edición)
         box.addEventListener("click", function () {
           if (!editState[contenedorId]) return;
 
@@ -159,6 +163,10 @@
       });
       editBtn.disabled = true;
       saveBtn.disabled = false;
+
+      // Quitar transparencia
+      const sectionId = `section-${contenedorId.split('-')[1]}`;
+      document.getElementById(sectionId).classList.remove("bloqueado");
     }
 
     function guardarCambios(contenedorId, editBtn, saveBtn) {
@@ -184,6 +192,10 @@
 
       editBtn.disabled = false;
       saveBtn.disabled = true;
+
+      // Volver a poner transparencia
+      const sectionId = `section-${contenedorId.split('-')[1]}`;
+      document.getElementById(sectionId).classList.add("bloqueado");
     }
 
     function escucharFirebase() {
@@ -216,7 +228,6 @@
       crearCuadros(201, 268, "grid-sabado");
       crearCuadros(301, 350, "grid-domingo");
 
-      // Configurar botones
       ["semana", "sabado", "domingo"].forEach((nombre) => {
         const id = `grid-${nombre}`;
         const editBtn = document.getElementById(`editar-${nombre}`);
@@ -233,7 +244,7 @@
 <body>
   <h1>Registro de Predicaciones</h1>
 
-  <div class="section">
+  <div class="section bloqueado" id="section-semana">
     <h2>Predicación de entre semana</h2>
     <div class="grid" id="grid-semana"></div>
     <div class="btn-group">
@@ -242,7 +253,7 @@
     </div>
   </div>
 
-  <div class="section">
+  <div class="section bloqueado" id="section-sabado">
     <h2>Predicación Sábado</h2>
     <div class="grid" id="grid-sabado"></div>
     <div class="btn-group">
@@ -251,16 +262,13 @@
     </div>
   </div>
 
-  <div class="section">
+  <div class="section bloqueado" id="section-domingo">
     <h2>Predicación Domingo</h2>
     <div class="grid" id="grid-domingo"></div>
-     <div class="btn-group">
+    <div class="btn-group">
       <button class="btn" id="editar-domingo">🔧 Editar</button>
       <button class="btn" id="guardar-domingo" disabled>💾 Guardar</button>
     </div>
   </div>
 </body>
 </html>
-
-
-
