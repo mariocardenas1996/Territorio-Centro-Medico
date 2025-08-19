@@ -27,10 +27,6 @@
       opacity: 0.5;
       pointer-events: none;
     }
-    /* Esta regla permite que los botones dentro de sección bloqueada sigan siendo clicables */
-    .section.bloqueado .btn-group {
-      pointer-events: auto;
-    }
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
@@ -44,18 +40,22 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      cursor: not-allowed;
       font-weight: bold;
       font-size: 0.9em;
       border-radius: 6px;
       user-select: none;
+      cursor: not-allowed; /* Default cursor */
+      transition: cursor 0.2s ease;
     }
     .box.marked {
       background: red;
       color: white;
     }
     .box.editable {
-      cursor: pointer;
+      cursor: pointer !important;
+    }
+    .box:not(.editable):hover {
+      cursor: not-allowed;
     }
     .date {
       font-size: 0.7em;
@@ -76,13 +76,11 @@
       border-radius: 5px;
       cursor: pointer;
       font-size: 0.9em;
+      opacity: 1; /* Siempre igual opacidad */
+      transition: background-color 0.3s ease;
     }
-    .btn:hover:not(:disabled) {
+    .btn:hover {
       background: #0056b3;
-    }
-    .btn:disabled {
-      background: #999;
-      cursor: default;
     }
     @media (max-width: 600px) {
       h1 {
@@ -176,41 +174,42 @@
       document.getElementById(sectionId).classList.remove("bloqueado");
     }
 
-function guardarCambios(contenedorId, editBtn, saveBtn) {
-  editState[contenedorId] = false;
-  const contenedor = document.getElementById(contenedorId);
-  const updates = {};
+    function guardarCambios(contenedorId, editBtn, saveBtn) {
+      editState[contenedorId] = false;
+      const contenedor = document.getElementById(contenedorId);
+      const updates = {};
 
-  contenedor.querySelectorAll(".box").forEach((box) => {
-    box.classList.remove("editable");
-    const dateEl = box.nextElementSibling;
-    if (box.classList.contains("marked")) {
-      updates[box.dataset.id] = {
-        marked: true,
-        date: dateEl.textContent,
-        contenedorId: contenedorId,
-      };
-    } else {
-      updates[box.dataset.id] = null;
+      contenedor.querySelectorAll(".box").forEach((box) => {
+        box.classList.remove("editable");
+        const dateEl = box.nextElementSibling;
+        if (box.classList.contains("marked")) {
+          updates[box.dataset.id] = {
+            marked: true,
+            date: dateEl.textContent,
+            contenedorId: contenedorId,
+          };
+        } else {
+          updates[box.dataset.id] = null;
+        }
+      });
+
+      console.log("Guardando cambios:", updates);
+
+      db.ref("cuadros").update(updates)
+        .then(() => {
+          console.log("Cambios guardados correctamente");
+          editBtn.disabled = false;
+          saveBtn.disabled = true;
+
+          const sectionId = `section-${contenedorId.split('-')[1]}`;
+          document.getElementById(sectionId).classList.add("bloqueado");
+        })
+        .catch((error) => {
+          console.error("Error guardando cambios:", error);
+          alert("Error al guardar los cambios. Intenta nuevamente.");
+        });
     }
-  });
 
-  console.log("Guardando cambios:", updates);
-
-  db.ref("cuadros").update(updates)
-    .then(() => {
-      console.log("Cambios guardados correctamente");
-      editBtn.disabled = false;
-      saveBtn.disabled = true;
-
-      const sectionId = `section-${contenedorId.split('-')[1]}`;
-      document.getElementById(sectionId).classList.add("bloqueado");
-    })
-    .catch((error) => {
-      console.error("Error guardando cambios:", error);
-      alert("Error al guardar los cambios. Intenta nuevamente.");
-    });
-}
     function escucharFirebase() {
       db.ref("cuadros").on("value", (snapshot) => {
         const data = snapshot.val();
@@ -226,7 +225,7 @@ function guardarCambios(contenedorId, editBtn, saveBtn) {
         if (!data) return;
 
         Object.entries(data).forEach(([boxId, value]) => {
-          if (value.marked) {
+          if (value && value.marked) {
             const box = document.querySelector(`.box[data-id="${boxId}"]`);
             const date = box?.nextElementSibling;
             if (box) box.classList.add("marked");
@@ -248,6 +247,18 @@ function guardarCambios(contenedorId, editBtn, saveBtn) {
 
         editBtn.addEventListener("click", () => toggleEdicion(id, editBtn, saveBtn));
         saveBtn.addEventListener("click", () => guardarCambios(id, editBtn, saveBtn));
+      });
+
+      // Inicialmente poner las secciones bloqueadas (transparencia y sin interacción)
+      ["semana", "sabado", "domingo"].forEach((nombre) => {
+        const sectionId = `section-grid-${nombre.split('-').pop()}`; // Este no funciona bien, cambio abajo.
+      });
+
+      // Poner las secciones bloqueadas al cargar
+      ["semana", "sabado", "domingo"].forEach((nombre) => {
+        const sectionId = `section-${nombre}`;
+        const section = document.getElementById(sectionId);
+        if (section) section.classList.add("bloqueado");
       });
 
       escucharFirebase();
@@ -285,4 +296,3 @@ function guardarCambios(contenedorId, editBtn, saveBtn) {
   </div>
 </body>
 </html>
-
