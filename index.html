@@ -170,7 +170,7 @@
       }
     }
 
-    /* Resetear sección y limpiar Firebase
+    // Resetear sección y limpiar Firebase
     function resetearSeccion(contenedorId, auto = false) {
       const contenedor = document.getElementById(contenedorId);
       const boxes = contenedor.querySelectorAll(".box");
@@ -189,7 +189,7 @@
         alert("🔄 Se ha reiniciado manualmente la sección.");
       }
     }
-*/
+
     // Escuchar cambios en Firebase en tiempo real y actualizar UI
     function escucharFirebase() {
       db.ref("cuadros").on("value", (snapshot) => {
@@ -254,21 +254,22 @@
   <div class="section">
   <h2>Predicación de entre semana</h2>
   <div class="grid" id="grid-semana"></div>
-  <button class="reset-btn" id="reset-semana">🔄 Reiniciar sección</button>
+  <!-- <button class="reset-btn" id="reset-semana">🔄 Reiniciar sección</button> -->
 </div>
 
 <div class="section">
   <h2>Predicación Sábado</h2>
   <div class="grid" id="grid-sabado"></div>
-  <button class="reset-btn" id="reset-sabado">🔄 Reiniciar sección</button>
+ <<!--  <button class="reset-btn" id="reset-sabado">🔄 Reiniciar sección</button>-->
 </div>
 
 <div class="section">
   <h2>Predicación Domingo</h2>
   <div class="grid" id="grid-domingo"></div>
-  <button class="reset-btn" id="reset-domingo">🔄 Reiniciar sección</button>
+  <!-- <button class="reset-btn" id="reset-domingo">🔄 Reiniciar sección</button>-->
 </div>
 </body>
 </html>
+
 
 
