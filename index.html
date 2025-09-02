@@ -1,359 +1,44 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Registro de Territorios</title>
-  <link rel="icon" href="icono.ico" type="image/x-icon" />
-  <link rel="apple-touch-icon" href="apple-icon.png" sizes="180x180">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 30px;
-      background: #f4f4f4;
-    }
-    h1 {
-      text-align: center;
-      font-size: 4em;
-    }
-    h2 {
-      margin-top: 20px;
-      color: #333;
-      font-size: 2em;
-    }
-    .section {
-      margin-bottom: 45px;
-      transition: opacity 0.5s ease;
-      border: 3px solid #007BFF;
-      padding: 10px;
-      background: #eaf3ff;
-    }
-    .section.bloqueado {
-      opacity: .4;
-      pointer-events: none;
-    }
-    /* Esta regla permite que los botones dentro de sección bloqueada sigan siendo clicables */
-    .section.bloqueado .btn-group {
-      pointer-events: auto;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-    .box {
-      aspect-ratio: 1 / 1;
-      background: white;
-      border: 2px solid #444;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      cursor: not-allowed;
-      font-weight: bold;
-      font-size: 0.9em;
-      border-radius: 6px;
-      user-select: none;
-    }
-    .box.marked {
-      background: red;
-      transition: opacity 0.8s ease;
-      color: white;
-      transition: background 0.3s ease;
-    }
-    .box.editable {
-      cursor: pointer;
-    }
-    .date {
-      font-size: 0.8em;
-      color: #070707;
-      text-align: center;
-      margin-top: 3px;
-    }
-    .btn-group {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-    .btn {
-      padding: 6px 12px;
-      background: #007BFF;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 0.9em;
-    }
-    .btn:hover:not(:disabled) {
-      background: #0056b3;
-    }
-    .btn:disabled {
-      background: #999;
-      cursor: default;
-    }
+const CACHE_NAME = 'territorios-cache-v1';
+const urlsToCache = [
+  './',
+  './index.html',
+  './manifest.json',
+  './icono-192.png',
+  './icono-512.png',
+  './icono.ico',
+  './apple-icon.png',
+  // Agrega aquí todos los archivos usados por tu app:
+  './Territorio Entre Semana.png',
+  './Territorio Sabado.png',
+  './Territorio Domingo.png',
+  './territorio.png'
+];
 
-  @media (max-width: 480px) {  
-      .date {
-        font-size: .75em;
-      }
-  .grid {
-    grid-template-columns: repeat(auto-fill, minmax(45px, 1fr));
-    gap: 20px;
-  }
-  .box {
-    font-size: 1em;
-    padding: 2px;
-  }
-  .btn-group {
-    flex-direction: column;
-    font-size: 1.5em;
-  }
-  .btn {
-    width: 100%;
-    font-size: 1em;
-    padding: 8px;
-  }
-  .section {
-    padding: 8px;
-    margin-bottom: 30px;
-  }
-  h1 {
-    font-size: 1.9em;
-  }
-  h2 {
-    font-size: 1.4em;
-  }
-}
-  </style>
-
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyB4UZLg690pqV6BcTU1Z5hvwwb1N-Bvvts",
-      authDomain: "predicacion-centro-medico.firebaseapp.com",
-      databaseURL: "https://predicacion-centro-medico-default-rtdb.firebaseio.com",
-      projectId: "predicacion-centro-medico",
-      storageBucket: "predicacion-centro-medico.appspot.com",
-      messagingSenderId: "911919962458",
-      appId: "1:911919962458:web:81ac1da17bcc7a32bc7b63",
-      measurementId: "G-HDL9592R95"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    const editState = {
-      "grid-semana": false,
-      "grid-sabado": false,
-      "grid-domingo": false
-    };
-
-    function crearCuadros(inicio, fin, contenedorId) {
-      const contenedor = document.getElementById(contenedorId);
-      for (let i = inicio; i <= fin; i++) {
-        const boxWrapper = document.createElement("div");
-        boxWrapper.style.textAlign = "center";
-
-        const box = document.createElement("div");
-        box.classList.add("box");
-        box.textContent = i;
-        box.dataset.id = `${contenedorId}-${i}`;
-
-        const date = document.createElement("div");
-        date.classList.add("date");
-
-        box.addEventListener("click", function () {
-          if (!editState[contenedorId]) return;
-
-          box.classList.toggle("marked");
-          if (box.classList.contains("marked")) {
-            const fechaStr = new Date().toLocaleDateString("es-ES", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-            });
-            date.textContent = fechaStr;
-          } else {
-            date.textContent = "";
-          }
-        });
-
-        boxWrapper.appendChild(box);
-        boxWrapper.appendChild(date);
-        contenedor.appendChild(boxWrapper);
-      }
-    }
-
-    function toggleEdicion(contenedorId, editBtn, saveBtn) {
-      editState[contenedorId] = true;
-      const contenedor = document.getElementById(contenedorId);
-      contenedor.querySelectorAll(".box").forEach((b) => {
-        b.classList.add("editable");
-      });
-      editBtn.disabled = true;
-      saveBtn.disabled = false;
-
-      const sectionId = `section-${contenedorId.split('-')[1]}`;
-      document.getElementById(sectionId).classList.remove("bloqueado");
-    }
-
-function guardarCambios(contenedorId, editBtn, saveBtn) {
-  editState[contenedorId] = false;
-  const contenedor = document.getElementById(contenedorId);
-  const updates = {};
-
-  contenedor.querySelectorAll(".box").forEach((box) => {
-    box.classList.remove("editable");
-    const dateEl = box.nextElementSibling;
-    if (box.classList.contains("marked")) {
-      updates[box.dataset.id] = {
-        marked: true,
-        date: dateEl.textContent,
-        contenedorId: contenedorId,
-      };
-    } else {
-      updates[box.dataset.id] = null;
-    }
-  });
-
-  console.log("Guardando cambios:", updates);
-
-  db.ref("cuadros").update(updates)
-    .then(() => {
-      console.log("Cambios guardados correctamente");
-      editBtn.disabled = false;
-      saveBtn.disabled = true;
-
-      const sectionId = `section-${contenedorId.split('-')[1]}`;
-      document.getElementById(sectionId).classList.add("bloqueado");
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(urlsToCache);
     })
-    .catch((error) => {
-      console.error("Error guardando cambios:", error);
-      alert("Error al guardar los cambios. Intenta nuevamente.");
-    });
-}
-    function escucharFirebase() {
-      db.ref("cuadros").on("value", (snapshot) => {
-        const data = snapshot.val();
-        ["grid-semana", "grid-sabado", "grid-domingo"].forEach((id) => {
-          const cont = document.getElementById(id);
-          cont.querySelectorAll(".box").forEach((box) => {
-            box.classList.remove("marked");
-            const dateEl = box.nextElementSibling;
-            if (dateEl) dateEl.textContent = "";
-          });
-        });
+  );
+});
 
-        if (!data) return;
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request).then((resp) => {
+      return resp || fetch(event.request);
+    })
+  );
+});
 
-        Object.entries(data).forEach(([boxId, value]) => {
-          if (value.marked) {
-            const box = document.querySelector(`.box[data-id="${boxId}"]`);
-            const date = box?.nextElementSibling;
-            if (box) box.classList.add("marked");
-            if (date) date.textContent = value.date;
-          }
-        });
-      });
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      crearCuadros(101, 146, "grid-semana");
-      crearCuadros(201, 268, "grid-sabado");
-      crearCuadros(301, 350, "grid-domingo");
-
-      ["semana", "sabado", "domingo"].forEach((nombre) => {
-        const id = `grid-${nombre}`;
-        const editBtn = document.getElementById(`editar-${nombre}`);
-        const saveBtn = document.getElementById(`guardar-${nombre}`);
-
-        editBtn.addEventListener("click", () => toggleEdicion(id, editBtn, saveBtn));
-        saveBtn.addEventListener("click", () => guardarCambios(id, editBtn, saveBtn));
-      });
-
-      escucharFirebase();
-
-      document.querySelectorAll(".btn-ver-mapa").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const imgNombre = btn.getAttribute("data-img");
-          abrirModal(imgNombre);
-          });
-      });
-
-    
-
-  function abrirModal(imagen) {
-  const modal = document.getElementById("modal-mapa");
-  const img = document.getElementById("imagen-mapa");
-  img.src = imagen;
-  modal.style.display = "flex";
-  }
-  
-  document.getElementById("titulo-principal").addEventListener("click", function () {
-    document.getElementById("modal-titulo").style.display = "flex";
-  });
-
-  });
-
-    function cerrarModal() {
-    const modal = document.getElementById("modal-mapa");
-    modal.style.display = "none";
-  }
-
-  function cerrarModalTitulo() {
-    document.getElementById("modal-titulo").style.display = "none";
-  }
-
-
-
-  </script>
-</head>
-<body>
-  <h1 id="titulo-principal" style="cursor:pointer;">Registro de Territorios</h1>
-
-  <div class="section bloqueado" id="section-semana">
-    <h2>Predicación de entre semana</h2>
-    <div class="grid" id="grid-semana"></div>
-    <div class="btn-group">
-      <button class="btn" id="editar-semana">🔧 Editar</button>
-      <button class="btn" id="guardar-semana" disabled>💾 Guardar</button>
-      <button class="btn btn-ver-mapa" data-img="Territorio Entre Semana.png">🗺 Ver Territorio</button>
-    </div>
-  </div>
-
-  <div class="section bloqueado" id="section-sabado">
-    <h2>Predicación Sábado</h2>
-    <div class="grid" id="grid-sabado"></div>
-    <div class="btn-group">
-      <button class="btn" id="editar-sabado">🔧 Editar</button>
-      <button class="btn" id="guardar-sabado" disabled>💾 Guardar</button>
-      <button class="btn btn-ver-mapa" data-img="Territorio Sabado.png">🗺 Ver Territorio</button>
-    </div>
-  </div>
-
-  <div class="section bloqueado" id="section-domingo">
-    <h2>Predicación Domingo</h2>
-    <div class="grid" id="grid-domingo"></div>
-    <div class="btn-group">
-      <button class="btn" id="editar-domingo">🔧 Editar</button>
-      <button class="btn" id="guardar-domingo" disabled>💾 Guardar</button>
-      <button class="btn btn-ver-mapa" data-img="Territorio Domingo.png">🗺 Ver Territorio</button>
-    </div>
-  </div>
-
-  <!-- Modal -->
-<div id="modal-mapa" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000000dd; z-index:9999; justify-content:center; align-items:center; flex-direction:column;">
-  <img id="imagen-mapa" src="" alt="Mapa del territorio" style="max-width:100%; max-height:90%; border:5px solid white; border-radius:8px;" />
-  <button onclick="cerrarModal()" style="margin-top:20px; padding:10px 20px; font-size:1.1em; background:white; border:none; border-radius:6px; cursor:pointer;">Cerrar</button>
-</div>
-
-<!-- Modal de Bienvenida o Información al hacer clic en el título -->
-<div id="modal-titulo" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000000cc; z-index:10000; justify-content:center; align-items:center; flex-direction:column;">
-  <img id="imagen-titulo" src="territorio.png" alt="Información del sistema" style="max-width:100%; max-height:90%; border:5px solid white; border-radius:8px;" />
-  <button onclick="cerrarModalTitulo()" style="margin-top:20px; padding:10px 20px; font-size:1.1em; background:white; border:none; border-radius:6px; cursor:pointer;">Cerrar</button>
-</div>
-
-</body>
-</html>
+self.addEventListener('activate', (event) => {
+  const cacheWhitelist = [CACHE_NAME];
+  event.waitUntil(
+    caches.keys().then((keyList) =>
+      Promise.all(keyList.map((key) => {
+        if (!cacheWhitelist.includes(key)) {
+          return caches.delete(key);
+        }
+      }))
+    )
+  );
+});
