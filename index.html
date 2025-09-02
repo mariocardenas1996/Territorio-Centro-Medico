@@ -126,14 +126,14 @@
     font-size: 1.4em;
   }
 }
-  </style>
+</style>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
-  <script>
-    const firebaseConfig = {
+<script>
+const firebaseConfig = {
       apiKey: "AIzaSyB4UZLg690pqV6BcTU1Z5hvwwb1N-Bvvts",
       authDomain: "predicacion-centro-medico.firebaseapp.com",
       databaseURL: "https://predicacion-centro-medico-default-rtdb.firebaseio.com",
@@ -142,17 +142,17 @@
       messagingSenderId: "911919962458",
       appId: "1:911919962458:web:81ac1da17bcc7a32bc7b63",
       measurementId: "G-HDL9592R95"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+  };
 
-    const editState = {
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const editState = {
       "grid-semana": false,
       "grid-sabado": false,
       "grid-domingo": false
-    };
+  };
 
-    function crearCuadros(inicio, fin, contenedorId) {
+function crearCuadros(inicio, fin, contenedorId) {
       const contenedor = document.getElementById(contenedorId);
       for (let i = inicio; i <= fin; i++) {
         const boxWrapper = document.createElement("div");
@@ -188,7 +188,7 @@
       }
     }
 
-    function toggleEdicion(contenedorId, editBtn, saveBtn) {
+function toggleEdicion(contenedorId, editBtn, saveBtn) {
       editState[contenedorId] = true;
       const contenedor = document.getElementById(contenedorId);
       contenedor.querySelectorAll(".box").forEach((b) => {
@@ -224,7 +224,8 @@ function guardarCambios(contenedorId, editBtn, saveBtn) {
 
   db.ref("cuadros").update(updates)
     .then(() => {
-      console.log("Cambios guardados correctamente");
+  console.log("Cambios guardados correctamente");
+  verificarYReiniciarSiTodoMarcado(); // ✔ Llama aquí
       editBtn.disabled = false;
       saveBtn.disabled = true;
 
@@ -236,7 +237,32 @@ function guardarCambios(contenedorId, editBtn, saveBtn) {
       alert("Error al guardar los cambios. Intenta nuevamente.");
     });
 }
-    function escucharFirebase() {
+
+function verificarYReiniciarSiTodoMarcado() {
+  const grids = ['grid-semana', 'grid-sabado', 'grid-domingo'];
+  let todoMarcado = true;
+
+  for (const id of grids) {
+    const boxes = document.querySelectorAll(`#${id} .box`);
+    for (const box of boxes) {
+      if (!box.classList.contains("marked")) {
+        todoMarcado = false;
+        break;
+      }
+    }
+    if (!todoMarcado) break;
+  }
+
+  if (todoMarcado) {
+    db.ref("cuadros").remove().then(() => {
+      console.log("Todas las casillas estaban marcadas. Se reinició automáticamente.");
+      alert("✅ Se reiniciaron todas las casillas automáticamente.");
+    });
+  }
+}
+
+
+function escucharFirebase() {
       db.ref("cuadros").on("value", (snapshot) => {
         const data = snapshot.val();
         ["grid-semana", "grid-sabado", "grid-domingo"].forEach((id) => {
@@ -259,7 +285,7 @@ function guardarCambios(contenedorId, editBtn, saveBtn) {
           }
         });
       });
-    }
+}
 
     document.addEventListener("DOMContentLoaded", () => {
       crearCuadros(101, 146, "grid-semana");
@@ -296,24 +322,61 @@ function guardarCambios(contenedorId, editBtn, saveBtn) {
   document.getElementById("titulo-principal").addEventListener("click", function () {
     document.getElementById("modal-titulo").style.display = "flex";
   });
-
   });
 
-    function cerrarModal() {
-    const modal = document.getElementById("modal-mapa");
-    modal.style.display = "none";
+function cerrarModal() {
+  const modal = document.getElementById("modal-mapa");
+  modal.style.display = "none";
+}
+
+function cerrarModalTitulo() {
+  document.getElementById("modal-titulo").style.display = "none";
+}
+
+function login() {
+  const password = document.getElementById('password-input').value;
+  const contraseñaCorrecta = "1234"; // Cambia esto por tu contraseña
+
+  if (password === contraseñaCorrecta) {
+    document.getElementById('admin-controls').style.display = 'block';
+    document.getElementById('login-container').style.display = 'none';
+  } else {
+    alert("❌ Contraseña incorrecta");
   }
+}
 
-  function cerrarModalTitulo() {
-    document.getElementById("modal-titulo").style.display = "none";
-  }
+function reiniciarTodo() {
+  const confirmar = confirm("¿Estás seguro de que quieres reiniciar todo?");
+  if (!confirmar) return;
+
+  db.ref("cuadros").remove()
+    .then(() => {
+      alert("✅ Todos los datos fueron reiniciados manualmente.");
+    })
+    .catch((err) => {
+      alert("Error al reiniciar: " + err.message);
+    });
+}
 
 
 
-  </script>
+</script>
 </head>
 <body>
-  <h1 id="titulo-principal" style="cursor:pointer;">Registro de Territorios</h1>
+
+
+
+<h1 id="titulo-principal" style="cursor:pointer;">Registro de Territorios</h1>
+
+<div id="login-container" style="text-align:center; margin-bottom:20px;">
+  <input type="password" id="password-input" placeholder="Contraseña de administrador" />
+  <button onclick="login()">Ingresar</button>
+</div>
+
+<div id="admin-controls" style="text-align:center; display:none; margin-bottom:20px;">
+  <button onclick="reiniciarTodo()" class="btn">🔁 Reiniciar Todo</button>
+</div>
+
 
   <div class="section bloqueado" id="section-semana">
     <h2>Predicación de entre semana</h2>
