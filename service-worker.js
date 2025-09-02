@@ -4,10 +4,7 @@ const urlsToCache = [
   './index.html',
   './manifest.json',
   './icono-192.png',
-  './icono-512.png',
   './icono.ico',
-  './apple-icon.png',
-  // Agrega aquí todos los archivos usados por tu app:
   './Territorio Entre Semana.png',
   './Territorio Sabado.png',
   './Territorio Domingo.png',
@@ -42,3 +39,4 @@ self.addEventListener('activate', (event) => {
     )
   );
 });
+
