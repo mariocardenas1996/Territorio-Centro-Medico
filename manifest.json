@@ -1,7 +1,7 @@
 {
   "name": "Registro de Territorios",
   "short_name": "Territorios",
-  "start_url": ".",
+  "start_url": "https://mariocardenas1996.github.io/Territorio-Centro-Medico/",
   "display": "standalone",
   "background_color": "#f4f4f4",
   "theme_color": "#007BFF",
@@ -18,4 +18,5 @@
       "type": "image/png"
     }
   ]
+
 }
