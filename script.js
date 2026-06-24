@@ -1,8 +1,4 @@
-let appMode = "predicacion"; // predicacion | campanas
 
-function getRef() {
-  return db.ref("cuadros/" + appMode);
-}
 
 function toggleMenu() {
   const sidebar = document.getElementById("sidebar");
@@ -41,6 +37,12 @@ const firebaseConfig = {
 
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
+  let appMode = "predicacion";
+let firebaseListener = null;
+
+function getRef() {
+  return db.ref("cuadros/" + appMode);
+}
   const editState = {
       "grid-semana": false,
       "grid-sabado": false,
@@ -117,7 +119,7 @@ function guardarCambios(contenedorId, editBtn, saveBtn) {
 
   console.log("Guardando cambios:", updates);
 
-  db.ref("cuadros").update(updates)
+  getRef().update(updates)
     .then(() => {
   console.log("Cambios guardados correctamente");
   verificarYReiniciarSiTodoMarcado(); // ✔ Llama aquí
@@ -149,7 +151,7 @@ function verificarYReiniciarSiTodoMarcado() {
   }
 
   if (todoMarcado) {
-    db.ref("cuadros").remove().then(() => {
+    getRef().remove().then(() => {
       console.log("Todas las casillas estaban marcadas. Se reinició automáticamente.");
       alert("✅ Se reiniciaron todas las casillas automáticamente.");
     });
@@ -158,28 +160,106 @@ function verificarYReiniciarSiTodoMarcado() {
 
 
 function escucharFirebase() {
-      db.ref("cuadros").on("value", (snapshot) => {
-        const data = snapshot.val();
-        ["grid-semana", "grid-sabado", "grid-domingo"].forEach((id) => {
-          const cont = document.getElementById(id);
-          cont.querySelectorAll(".box").forEach((box) => {
-            box.classList.remove("marked");
-            const dateEl = box.nextElementSibling;
-            if (dateEl) dateEl.textContent = "";
-          });
-        });
 
-        if (!data) return;
+  // eliminar listener anterior
+  if (firebaseListener) {
+    firebaseListener.off();
+  }
 
-        Object.entries(data).forEach(([boxId, value]) => {
-          if (value.marked) {
-            const box = document.querySelector(`.box[data-id="${boxId}"]`);
-            const date = box?.nextElementSibling;
-            if (box) box.classList.add("marked");
-            if (date) date.textContent = value.date;
-          }
-        });
+  firebaseListener = getRef();
+
+  firebaseListener.on("value", (snapshot) => {
+
+    const data = snapshot.val();
+
+    // limpiar pantalla
+    ["grid-semana","grid-sabado","grid-domingo"].forEach(id => {
+
+      const cont = document.getElementById(id);
+
+      cont.querySelectorAll(".box").forEach(box => {
+
+        box.classList.remove("marked");
+
+        const dateEl = box.nextElementSibling;
+
+        if (dateEl) {
+          dateEl.textContent = "";
+        }
+
       });
+
+    });
+
+    if (!data) return;
+
+    Object.entries(data).forEach(([boxId, value]) => {
+
+      if (value.marked) {
+
+        const box = document.querySelector(
+          `.box[data-id="${boxId}"]`
+        );
+
+        const date = box?.nextElementSibling;
+
+        if (box) box.classList.add("marked");
+
+        if (date) date.textContent = value.date;
+
+      }
+
+    });
+
+  });
+
+}
+
+function mostrarSeccion(event, tab)  {
+     event.preventDefault();
+
+  if (appMode === tab) {
+    cerrarMenu();
+    return;
+  }
+
+  appMode = tab;
+
+  document.querySelectorAll('.sidebar a')
+    .forEach(btn => btn.classList.remove('active'));
+
+  event.currentTarget.classList.add('active');
+
+  cerrarMenu();
+
+  console.log("Sección:", tab);
+
+  const titulo = document.getElementById("titulo-principal");
+
+  if (tab === "predicacion") {
+    titulo.textContent = "Territorios - Predicación";
+  }
+
+  if (tab === "campañas") {
+    titulo.textContent = "Territorios - Campañas";
+  }
+
+  const titulos = document.querySelectorAll(".section h2");
+
+if(tab === "predicacion"){
+    titulos[0].textContent = "Predicación de entre semana";
+    titulos[1].textContent = "Predicación Sábado";
+    titulos[2].textContent = "Predicación Domingo";
+}
+
+if(tab === "campanas"){
+    titulos[0].textContent = "Campañas entre semana";
+    titulos[1].textContent = "Campañas Sábado";
+    titulos[2].textContent = "Campañas Domingo";
+}
+
+
+  escucharFirebase();
 }
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -214,8 +294,11 @@ function escucharFirebase() {
   modal.style.display = "flex";
   }
   
-  document.getElementById("titulo-principal").addEventListener("click", function () {
-    document.getElementById("modal-titulo").style.display = "flex";
+document.getElementById("titulo-principal").addEventListener("click", function () {
+document.getElementById("modal-titulo").style.display = "flex";
+
+   
+escucharFirebase();
   });
   });
 
@@ -240,11 +323,19 @@ function login() {
   }
 }
 
+function logout() {
+  // Ocultar panel principal
+  document.getElementById("admin-controls").style.display = "none";
+  // Mostrar login
+  document.getElementById("login-container").style.display = "block";
+   document.getElementById("password-input").value = "";
+};
+
 function reiniciarTodo() {
   const confirmar = confirm("¿Estás seguro de que quieres reiniciar todo?");
   if (!confirmar) return;
 
-  db.ref("cuadros").remove()
+  getRef().remove()
     .then(() => {
       alert("✅ Todos los datos fueron reiniciados manualmente.");
     })
@@ -277,11 +368,25 @@ document.addEventListener("touchend", e => {
 
 function descargarExcel() {
 
-  const secciones = [
-    { id: "grid-semana", nombre: "Predicación entre semana" },
-    { id: "grid-sabado", nombre: "Sábado" },
-    { id: "grid-domingo", nombre: "Domingo" }
-  ];
+const prefijo =
+  appMode === "predicacion"
+  ? "Predicación"
+  : "Campañas";
+
+const secciones = [
+  {
+    id: "grid-semana",
+    nombre: `${prefijo} Entre Semana`
+  },
+  {
+    id: "grid-sabado",
+    nombre: `${prefijo} Sábado`
+  },
+  {
+    id: "grid-domingo",
+    nombre: `${prefijo} Domingo`
+  }
+];
 
   const wb = XLSX.utils.book_new();
 
@@ -307,15 +412,18 @@ function descargarExcel() {
   });
 
   const fecha = new Date().toISOString().split("T")[0];
-  XLSX.writeFile(wb, `territorios_${fecha}.xlsx`);
+  XLSX.writeFile(
+  wb,
+  `${appMode}_${fecha}.xlsx`
+);
+}
 
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('service-worker.js')
-      .then(function(reg) {
-        console.log("Service Worker registrado correctamente", reg);
-      })
-      .catch(function(err) {
-        console.error("Error al registrar el Service Worker", err);
-      });
-  }
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js')
+    .then(reg => {
+      console.log("Service Worker registrado", reg);
+    })
+    .catch(err => {
+      console.error(err);
+    });
 }
