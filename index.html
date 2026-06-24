@@ -28,15 +28,33 @@
 <div id="sidebar" class="sidebar">
   <!--<button class="close-btn" onclick="cerrarMenu()">✖</button>-->
   <h3 style="font-size: 30px;"><br>MENU</h3>
+<!-- MENÚ LATERAL 
   <a style="font-size: 25px;" href="#" onclick="mostrarSeccion('predicacion')">📖 Predicación</a>
   <a style="font-size: 25px;" href="#" onclick="mostrarSeccion('campanas')">📣 Campañas</a>
+-->
+
+<div class="menu-header">
+  <div class="menu-logo">📍</div>
+  <div>
+    <strong>Centro Médico</strong>
+    <small>Registro de Territorios</small>
+  </div>
+</div>
+
+  <a href="#" onclick="mostrarSeccion(event,'predicacion')">
+  📖 Predicación
+  </a>
+
+  <a href="#" onclick="mostrarSeccion(event,'campañas')">
+  📣 Campañas
+  </a>
 </div>
 
 
 
 <!-- FONDO OSCURO -->
 <div id="overlay" class="overlay" onclick="cerrarMenu()"></div>
-<h1 id="titulo-principal" style="cursor:pointer;">Registro de Territorios</h1>
+<h1 id="titulo-principal" style="cursor:pointer;">Territorios - Predicación</h1>
 
 <div style="margin-bottom:15px; margin-top: 10px;">
   <button class="btn" onclick="descargarExcel()">📊 Descargar Excel</button>
@@ -48,8 +66,10 @@
 </div>
 
 <div id="admin-controls" style="text-align:center; display:none; margin-bottom:20px;">
-  <button onclick="reiniciarTodo()" class="btn">🔁 Reiniciar Todo</button>
+  <button onclick="reiniciarTodo()" class="btn_login">🔁Reiniciar Todo</button>
+  <button id="btn_log" onclick="logout()" class="btn_login">Salir</button>
 </div>
+
 
 
 
@@ -94,6 +114,10 @@
   <img id="imagen-titulo" src="territorio.png" alt="Información del sistema" style="max-width:100%; max-height:90%; border:5px solid white; border-radius:8px;" />
   <button onclick="cerrarModalTitulo()" style="margin-top:20px; padding:10px 20px; font-size:1.1em; background:white; border:none; border-radius:6px; cursor:pointer;">Cerrar</button>
 </div>
+
+<script>
+  
+</script>
 
 </body>
 </html>
