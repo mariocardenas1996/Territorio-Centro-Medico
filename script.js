@@ -237,11 +237,11 @@ function mostrarSeccion(event, tab)  {
   const titulo = document.getElementById("titulo-principal");
 
   if (tab === "predicacion") {
-    titulo.textContent = "Territorios - Predicación";
+    titulo.textContent = "Territorios Predicación";
   }
 
   if (tab === "campañas") {
-    titulo.textContent = "Territorios - Campañas";
+    titulo.textContent = "Territorios Campañas";
   }
 
   const titulos = document.querySelectorAll(".section h2");
