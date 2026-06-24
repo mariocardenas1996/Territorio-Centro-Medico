@@ -56,16 +56,16 @@
 <div id="overlay" class="overlay" onclick="cerrarMenu()"></div>
 <h1 id="titulo-principal" style="cursor:pointer;">Territorios Predicación</h1>
 
-<div style="margin-bottom:15px; margin-top: 10px;">
+<div style="text-align: center; margin-top: 15px; margin-bottom: 15px;">
   <button class="btn" onclick="descargarExcel()">📊 Descargar Excel</button>
 </div>
 
-<div class = "text" id="login-container">
+<div id="login-container" style="align-items: center; ">
   <input class = "login-card" type="password" id="password-input" placeholder="Contraseña" />
-  <button class="btn-ingresar" onclick="login()">Ingresar</button>
+  <button class="btn_login" onclick="login()">Ingresar</button>
 </div>
 
-<div id="admin-controls" style="text-align:center; display:none; margin-bottom:20px;">
+<div class = "contenedor-de-botones" id="admin-controls" style="text-align:center; display:none; margin-bottom:20px;">
   <button onclick="reiniciarTodo()" class="btn_login">🔁Reiniciar Todo</button>
   <button id="btn_log" onclick="logout()" class="btn_login">Salir</button>
 </div>
