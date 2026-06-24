@@ -327,7 +327,7 @@ function logout() {
   // Ocultar panel principal
   document.getElementById("admin-controls").style.display = "none";
   // Mostrar login
-  document.getElementById("login-container").style.display = "block";
+  document.getElementById("login-container").style.display = "flex";
    document.getElementById("password-input").value = "";
 };
 
