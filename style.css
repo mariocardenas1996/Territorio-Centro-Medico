@@ -22,18 +22,116 @@
 .sidebar a {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
+
   color: #e5e7eb;
   text-decoration: none;
-  padding: 12px;
-  border-radius: 10px;
-  margin: 8px 0;
-  transition: 0.2s;
+
+  padding: 16px 18px;
+  margin: 10px 0;
+
+  border-radius: 16px;
+
+  background: rgba(255,255,255,0.03);
+
+  border: 1px solid rgba(255,255,255,0.05);
+
+  transition: all .3s ease;
+
+  font-size: 1.1rem;
+  font-weight: 600;
+
+  position: relative;
+  overflow: hidden;
+}
+
+.sidebar a::before {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  top: 0;
+
+  width: 4px;
+  height: 100%;
+
+  background: #3b82f6;
+
+  transform: scaleY(0);
+
+  transition: .3s ease;
+}
+
+.sidebar a:hover::before {
+  transform: scaleY(1);
+}
+
+.sidebar a.active {
+  background: linear-gradient(
+    135deg,
+    #2563eb,
+    #1d4ed8
+  );
+
+  color: white;
+
+  box-shadow:
+    0 10px 25px rgba(37,99,235,.35);
 }
 
 .sidebar a:hover {
-  background: rgba(255,255,255,0.08);
-  transform: translateX(4px);
+  background: linear-gradient(
+    135deg,
+    rgba(37,99,235,.25),
+    rgba(59,130,246,.15)
+  );
+
+  border-color: rgba(59,130,246,.4);
+
+  transform: translateX(8px);
+
+  box-shadow:
+    0 8px 20px rgba(37,99,235,.15);
+}
+
+.menu-header{
+  display:flex;
+  align-items:center;
+  gap:15px;
+
+  margin-bottom:30px;
+  padding-bottom:20px;
+
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+
+.menu-logo{
+  width:50px;
+  height:50px;
+
+  border-radius:14px;
+
+  background:linear-gradient(
+    135deg,
+    #2563eb,
+    #06b6d4
+  );
+
+  display:flex;
+  justify-content:center;
+  align-items:center;
+
+  font-size:24px;
+}
+
+.menu-header strong{
+  display:block;
+  font-size:16px;
+}
+
+.menu-header small{
+  color:#94a3b8;
 }
 
 /* overlay más suave */
@@ -100,11 +198,17 @@
   pointer-events: none;
 }
 
-    body {
-      font-family: Arial, sans-serif;
-      margin: 30px;
-      background: #f4f4f4;
-    }
+body {
+  font-family: 'Segoe UI', sans-serif;
+  margin: 20px;
+  background:
+    linear-gradient(
+      135deg,
+      #eff6ff,
+      #dbeafe
+    );
+}
+    
     h1 {
       text-align: center;
       font-size: 4em;
@@ -115,12 +219,21 @@
       font-size: 2em;
     }
     .section {
-      margin-bottom: 45px;
-      transition: opacity 0.5s ease;
-      border: 3px solid #007BFF;
-      padding: 10px;
-      background: #eaf3ff;
-    }
+  background: white;
+  border: none;
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 25px;
+
+  box-shadow:
+    0 10px 30px rgba(0,0,0,.08);
+
+  transition: .3s ease;
+}
+
+.section:hover {
+  transform: translateY(-2px);
+}
     .section.bloqueado {
       opacity: .4;
       pointer-events: none;
@@ -134,28 +247,46 @@
       grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
       gap: 8px;
       margin-bottom: 10px;
+     
     }
     .box {
-      aspect-ratio: 1 / 1;
-      background: white;
-      border: 2px solid #444;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      cursor: not-allowed;
-      font-weight: bold;
-      font-size: 1em;
-      border-radius: 1px;
-      user-select: none;
-    }
-    .box.marked {
-      background: red;
-      transition: opacity 0.8s ease;
-      color: white;
-      transition: background 0.3s ease;
-    }
+  aspect-ratio: 1 / 1;
+  background: #ffffff;
+  border: 1px solid #dbeafe;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: not-allowed;
+  font-weight: 700;
+  font-size: .75rem;
+  border-radius: 100px;
+  user-select: none;
+  
+
+  box-shadow:
+    0 2px 8px rgba(0,0,0,.08);
+
+  transition: all .25s ease;
+}
+
+.box:hover {
+  transform: translateY(-2px);
+}
+
+.box.marked {
+  background: linear-gradient(
+    135deg,
+    #22c55e,
+    #16a34a
+  );
+
+  color: white;
+  border-color: transparent;
+}
+    
     .box.editable {
       cursor: pointer;
+      display: flex;
     }
     .date {
       font-size: 0.8em;
@@ -169,14 +300,33 @@
       margin-bottom: 10px;
     }
     .btn {
-      padding: 6px 12px;
-      background: #007BFF;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 0.9em;
-    }
+  border: none;
+  border-radius: 12px;
+  padding: 12px 18px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #2563eb,
+      #1d4ed8
+    );
+
+  color: white;
+  font-weight: 600;
+
+  box-shadow:
+    0 5px 15px rgba(37,99,235,.3);
+
+  transition: .25s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+.btn:active {
+  transform: scale(.98);
+}
     .btn:hover:not(:disabled) {
       background: #0056b3;
     }
@@ -191,22 +341,18 @@
     .date {
         font-size: .75em;
       }
-    .grid {
-    grid-template-columns: repeat(auto-fill, minmax(45px, 1fr));
-    gap: 20px;
-    }
-    .box {
-    font-size: 1em;
-    padding: 1px;
-  }
+   
+ .login-card {
+  width: 250px;
+  padding: 12px 15px;
 
-  .login-card {
-  max-width: 100px;
-  margin:10px auto;
-  padding: 5px;
-  background: white;
-  border-radius: 10px;
-  text-align: center;
+  border: 1px solid #dbeafe;
+  border-radius: 14px;
+
+  font-size: 16px;
+
+  box-shadow:
+    0 2px 10px rgba(0,0,0,.05);
 }
 
   .text{
@@ -221,7 +367,7 @@
     font-size: 1.5em;
   }
 .btn-ingresar{
-    padding: 6px 12px;
+    padding: 12px 30px;
       background: #007BFF;
       color: white;
       border: none;
@@ -239,11 +385,62 @@
     padding: 8px;
     margin-bottom: 30px;
   }
-  h1 {
-    font-size: 1.9em;
-  }
+ h1 {
+  background: linear-gradient(
+    135deg,
+    #2563eb,
+    #06b6d4
+  );
+
+  background-clip: text;
+  -webkit-background-clip: text;
+
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
   h2 {
     font-size: 1.4em;
     text-align: center;
   }
 }
+
+html {
+  scroll-behavior: smooth;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3b82f6;
+  border-radius: 10px;
+}
+
+.btn_login{
+     border: none;
+  border-radius: 12px;
+  padding: 12px 60px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #2563eb,
+      #1d4ed8
+    );
+
+  color: white;
+  font-weight: 600;
+
+  box-shadow:
+    0 5px 15px rgba(37,99,235,.3);
+
+  transition: .25s ease;
+}
+
+
+
